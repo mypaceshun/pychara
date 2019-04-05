@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>pychara.session &#8212; pychara 0.9.1 ドキュメント</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/translations.js"></script>
+    <link rel="index" title="索引" href="../../genindex.html" />
+    <link rel="search" title="検索" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>pychara.session のソースコード</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="k">import</span> <span class="n">BeautifulSoup</span>
+
+<span class="kn">from</span> <span class="nn">pychara.exceptions</span> <span class="k">import</span> <span class="p">(</span><span class="n">LoginFailureException</span><span class="p">,</span>
+                                <span class="n">LoginRequireException</span><span class="p">,</span>
+                                <span class="n">HTTPConnectException</span><span class="p">,</span>
+                                <span class="n">HTMLParseException</span><span class="p">)</span>
+
+<span class="n">LOGIN</span> <span class="o">=</span> <span class="s1">&#39;login&#39;</span>
+<span class="n">LOGOUT</span> <span class="o">=</span> <span class="s1">&#39;logout&#39;</span>
+
+<div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../pychara.html#pychara.session.Session">[ドキュメント]</a><span class="k">class</span> <span class="nc">Session</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;ログインセッションを張るためのクラス</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cookies</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span> <span class="o">=</span> <span class="s1">&#39;https://akb48.chara-ani.com&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">LOGIN_URL</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/login.aspx&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">LOGOUT_URL</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/logout.aspx&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">APPLY_URL</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/akb_history.aspx&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_find_hidden</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html</span><span class="p">):</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+        <span class="n">input_els</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+        <span class="n">hidden_data</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">input_el</span> <span class="ow">in</span> <span class="n">input_els</span><span class="p">:</span>
+            <span class="n">_type</span> <span class="o">=</span> <span class="n">input_el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_type</span> <span class="ow">in</span> <span class="s2">&quot;hidden&quot;</span><span class="p">:</span>
+                <span class="n">hidden_data</span><span class="p">[</span><span class="n">input_el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">input_el</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">hidden_data</span>
+
+<div class="viewcode-block" id="Session.login"><a class="viewcode-back" href="../../pychara.html#pychara.session.Session.login">[ドキュメント]</a>    <span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;ログイン処理を行う関数</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            username (str): ユーザー名</span>
+<span class="sd">            password (str): パスワード</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: ログインに成功したユーザー名</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            pychara.exception.LoginfailureException</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; login(&#39;username&#39;, &#39;password&#39;)</span>
+<span class="sd">            &#39;username&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pre</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LOGIN_URL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cookies</span> <span class="o">=</span> <span class="n">pre</span><span class="o">.</span><span class="n">cookies</span>
+        <span class="n">postdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_hidden</span><span class="p">(</span><span class="n">pre</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">postdata</span><span class="p">[</span><span class="s1">&#39;ScriptManager1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ScriptManager1%7CbtnLogin&#39;</span>
+        <span class="n">postdata</span><span class="p">[</span><span class="s1">&#39;txID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="n">postdata</span><span class="p">[</span><span class="s1">&#39;txPASSWORD&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">password</span>
+        <span class="n">postdata</span><span class="p">[</span><span class="s1">&#39;btnLogin.x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;173&#39;</span>
+        <span class="n">postdata</span><span class="p">[</span><span class="s1">&#39;btnLogin.y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;30&#39;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LOGIN_URL</span><span class="p">,</span>
+                            <span class="n">data</span><span class="o">=</span><span class="n">postdata</span><span class="p">,</span>
+                            <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">)</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+        <span class="n">username_el</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;lblUserName&quot;</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">username_el</span> <span class="ow">is</span> <span class="kc">None</span> \
+           <span class="ow">and</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LoginFailureException</span><span class="p">(</span><span class="s1">&#39;Invalid username or password&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad HTTP Status Code returnd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HTTPConnectException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">displayName</span> <span class="o">=</span> <span class="n">username_el</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">displayName</span></div>
+
+<div class="viewcode-block" id="Session.status"><a class="viewcode-back" href="../../pychara.html#pychara.session.Session.status">[ドキュメント]</a>    <span class="k">def</span> <span class="nf">status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;ログインチェックを行う関数</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: pyfortune.session.LOGINかpyfortune.session.LOGOUTが返される</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; status()</span>
+<span class="sd">            &#39;login&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">)</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+        <span class="n">username_el</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;lblUserName&quot;</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">username_el</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LOGOUT</span>
+        <span class="k">return</span> <span class="n">LOGIN</span></div>
+
+<div class="viewcode-block" id="Session.fetch_apply_list"><a class="viewcode-back" href="../../pychara.html#pychara.session.Session.fetch_apply_list">[ドキュメント]</a>    <span class="k">def</span> <span class="nf">fetch_apply_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;抽選申し込み履歴の抽出</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            page (int): 申し込み履歴を抽出するpage番号、最初は1</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: 申し込み情報の辞書のリスト</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            pychara.session.LoginRequireException</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; fetch_apply_list()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">()</span> <span class="ow">is</span> <span class="n">LOGOUT</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LoginRequireException</span><span class="p">(</span><span class="s1">&#39;Require Login&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">page</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">APPLY_URL</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">)</span>
+        <span class="c1">#  2ページ目以降は1ページ目からリンクを踏む必要がある</span>
+        <span class="k">if</span> <span class="n">page</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">postdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_hidden</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">postdata</span><span class="p">[</span><span class="s1">&#39;__EVENTARGUMENT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Page$</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">page</span>
+            <span class="n">postdata</span><span class="p">[</span><span class="s1">&#39;__EVENTTARGET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dgvList&#39;</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">APPLY_URL</span><span class="p">,</span>
+                               <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">,</span>
+                               <span class="n">data</span><span class="o">=</span><span class="n">postdata</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad HTTP Status Code returnd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HTTPConnectException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">)</span>
+        <span class="n">table_el</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;dgvList&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">table_el</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTMLParseException</span><span class="p">(</span><span class="s1">&#39;table element not found&#39;</span><span class="p">)</span>
+        <span class="n">tr_els</span> <span class="o">=</span> <span class="n">table_el</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s1">&#39;tr&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tr_els</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTMLParseException</span><span class="p">(</span><span class="s1">&#39;tr element not found&#39;</span><span class="p">)</span>
+        <span class="c1">#  前3行と後ろ2行はナビゲーション等なので除外</span>
+        <span class="n">tr_els</span> <span class="o">=</span> <span class="n">tr_els</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">apply_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tr_el</span> <span class="ow">in</span> <span class="n">tr_els</span><span class="p">:</span>
+            <span class="n">td_list</span> <span class="o">=</span> <span class="n">tr_el</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s1">&#39;td&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">td_list</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HTMLParseException</span><span class="p">(</span><span class="s1">&#39;td element num is not 8&#39;</span><span class="p">)</span>
+            <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">td_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;%Y年%m月</span><span class="si">%d</span><span class="s1">日&#39;</span><span class="p">)</span>
+            <span class="nb">id</span> <span class="o">=</span> <span class="n">td_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">td_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">one_money</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">td_list</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+            <span class="n">num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">td_list</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">total_money</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">td_list</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">))</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">td_list</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">status_code</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;当選&#39;</span><span class="p">:</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;落選&#39;</span><span class="p">:</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">status</span> <span class="o">==</span> <span class="s1">&#39;抽選中&#39;</span><span class="p">:</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">apply_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+                               <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="nb">id</span><span class="p">,</span>
+                               <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                               <span class="s1">&#39;one_money&#39;</span><span class="p">:</span> <span class="n">one_money</span><span class="p">,</span>
+                               <span class="s1">&#39;num&#39;</span><span class="p">:</span> <span class="n">num</span><span class="p">,</span>
+                               <span class="s1">&#39;total_money&#39;</span><span class="p">:</span> <span class="n">total_money</span><span class="p">,</span>
+                               <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span>
+                               <span class="s1">&#39;status_code&#39;</span><span class="p">:</span> <span class="n">status_code</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">apply_list</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">pychara</a></h1>
+
+
+
+
+
+
+
+
+<h3>ナビゲーション</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">更新履歴</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pychara.html">pychara package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">モジュールコード</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>クイック検索</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="検索" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, KAWAI Shun.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

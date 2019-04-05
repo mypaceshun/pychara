@@ -30,7 +30,7 @@ secrets:
 
 .PHONY: doc
 doc:
-	${ACTIVATE} && sphinx-apidoc -f -o docs_build/ pyfortune/
+	${ACTIVATE} && sphinx-apidoc -f -o docs_build/ pychara/
 	${ACTIVATE} && cd docs_build/ && make html
 	cp -rfv docs_build/_build/html/* docs/
 
