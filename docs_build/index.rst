@@ -18,11 +18,9 @@ pycharaは某兄さんへのスクレイピングを補助するツールです�
 インストール
 ------------------------------------
 
-githubからダウンロードしてきてインストールします ::
+pipコマンドを利用してインストールします。
 
-   $ git clone https://github.com/mypaceshun/pychara
-   $ cd pychara
-   $ python3 setup.py install
+   $ pip install pychara
 
 
 クイックスタート
