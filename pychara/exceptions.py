@@ -16,3 +16,7 @@ class HTTPConnectException(PyCharaException):
 
 class HTMLParseException(PyCharaException):
     pass
+
+
+class ApplyDisableException(PyCharaException):
+    pass

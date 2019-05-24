@@ -5,7 +5,8 @@ from bs4 import BeautifulSoup
 from pychara.exceptions import (LoginFailureException,
                                 LoginRequireException,
                                 HTTPConnectException,
-                                HTMLParseException)
+                                HTMLParseException,
+                                ApplyDisableException)
 
 LOGIN = 'login'
 LOGOUT = 'logout'
@@ -283,7 +284,7 @@ class Session():
             raise HTMLParseException(error)
 
 
-    def apply_enable(self):
+    def fetch_apply_enable(self):
         """申し込み受付中かどうかのチェック
 
         Returns:
@@ -294,8 +295,8 @@ class Session():
             pychara.exceptions.HTMLParseException
 
         Examples:
-            >>> fetch_apply_schedule()
-            [{'title': '...', 'body': '...'}, {'title...]
+            >>> fetch_apply_enable()
+            True
         """
         res = requests.get(self.BASE_URL, cookies=self.cookies)
         if res.status_code != 200:
@@ -306,3 +307,34 @@ class Session():
         if main_btn_el is None:
             return False
         return True
+
+    def fetch_apply_events(self):
+        """申し込み可能な日程とグループのリストを取得
+
+        Returns:
+            list: 申し込み可能な日程とグループのリスト
+
+        Raises:
+            pychara.exceptions.HTTPConnectException
+            pychara.exceptions.HTMLParseException
+            pychara.exceptions.ApplyDisableException
+
+        Examples:
+            >>> fetch_apply_enables()
+            [{'text': '...', 'value': '...'}, {'text...]
+        """
+        if not self.fetch_apply_enable():
+            raise ApplyDisableException('Apply disable')
+        res = requests.get(self.POST_URL, cookies=self.cookies)
+        if res.status_code != 200:
+            msg = 'Bad HTTP Status Code returnd {}'.format(res.status_code)
+            raise HTTPConnectException(msg)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        try:
+            events_els = soup.find('select')
+            options_els = events_els.findAll('option')
+            apply_list =  [{'text': e.text, 'value': e.attrs['value']} for e in options_els]
+            return apply_list
+        except Exception as error:
+            raise HTMLParseException(error)
+
