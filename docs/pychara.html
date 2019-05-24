@@ -40,6 +40,12 @@
 <div class="section" id="module-pychara.exceptions">
 <span id="pychara-exceptions-module"></span><h2>pychara.exceptions module<a class="headerlink" href="#module-pychara.exceptions" title="このヘッドラインへのパーマリンク">¶</a></h2>
 <dl class="exception">
+<dt id="pychara.exceptions.ApplyDisableException">
+<em class="property">exception </em><code class="descclassname">pychara.exceptions.</code><code class="descname">ApplyDisableException</code><a class="reference internal" href="_modules/pychara/exceptions.html#ApplyDisableException"><span class="viewcode-link">[ソース]</span></a><a class="headerlink" href="#pychara.exceptions.ApplyDisableException" title="この定義へのパーマリンク">¶</a></dt>
+<dd><p>ベースクラス: <a class="reference internal" href="#pychara.exceptions.PyCharaException" title="pychara.exceptions.PyCharaException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pychara.exceptions.PyCharaException</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
 <dt id="pychara.exceptions.HTMLParseException">
 <em class="property">exception </em><code class="descclassname">pychara.exceptions.</code><code class="descname">HTMLParseException</code><a class="reference internal" href="_modules/pychara/exceptions.html#HTMLParseException"><span class="viewcode-link">[ソース]</span></a><a class="headerlink" href="#pychara.exceptions.HTMLParseException" title="この定義へのパーマリンク">¶</a></dt>
 <dd><p>ベースクラス: <a class="reference internal" href="#pychara.exceptions.PyCharaException" title="pychara.exceptions.PyCharaException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pychara.exceptions.PyCharaException</span></code></a></p>
@@ -78,6 +84,57 @@
 <dd><p>ベースクラス: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>ログインセッションを張るためのクラス</p>
 <dl class="method">
+<dt id="pychara.session.Session.fetch_apply_enable">
+<code class="descname">fetch_apply_enable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pychara/session.html#Session.fetch_apply_enable"><span class="viewcode-link">[ソース]</span></a><a class="headerlink" href="#pychara.session.Session.fetch_apply_enable" title="この定義へのパーマリンク">¶</a></dt>
+<dd><p>申し込み受付中かどうかのチェック</p>
+<dl class="field-list simple">
+<dt class="field-odd">戻り値</dt>
+<dd class="field-odd"><p>申し込み受付中ならTrue</p>
+</dd>
+<dt class="field-even">戻り値の型</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">例外</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#pychara.exceptions.HTTPConnectException" title="pychara.exceptions.HTTPConnectException"><strong>pychara.exceptions.HTTPConnectException</strong></a> -- </p></li>
+<li><p><a class="reference internal" href="#pychara.exceptions.HTMLParseException" title="pychara.exceptions.HTMLParseException"><strong>pychara.exceptions.HTMLParseException</strong></a> -- </p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">サンプル</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fetch_apply_enable</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pychara.session.Session.fetch_apply_events">
+<code class="descname">fetch_apply_events</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pychara/session.html#Session.fetch_apply_events"><span class="viewcode-link">[ソース]</span></a><a class="headerlink" href="#pychara.session.Session.fetch_apply_events" title="この定義へのパーマリンク">¶</a></dt>
+<dd><p>申し込み可能な日程とグループのリストを取得</p>
+<dl class="field-list simple">
+<dt class="field-odd">戻り値</dt>
+<dd class="field-odd"><p>申し込み可能な日程とグループのリスト</p>
+</dd>
+<dt class="field-even">戻り値の型</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+<dt class="field-odd">例外</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#pychara.exceptions.HTTPConnectException" title="pychara.exceptions.HTTPConnectException"><strong>pychara.exceptions.HTTPConnectException</strong></a> -- </p></li>
+<li><p><a class="reference internal" href="#pychara.exceptions.HTMLParseException" title="pychara.exceptions.HTMLParseException"><strong>pychara.exceptions.HTMLParseException</strong></a> -- </p></li>
+<li><p><a class="reference internal" href="#pychara.exceptions.ApplyDisableException" title="pychara.exceptions.ApplyDisableException"><strong>pychara.exceptions.ApplyDisableException</strong></a> -- </p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">サンプル</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fetch_apply_enables</span><span class="p">()</span>
+<span class="go">[{&#39;text&#39;: &#39;...&#39;, &#39;value&#39;: &#39;...&#39;}, {&#39;text...]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="pychara.session.Session.fetch_apply_list">
 <code class="descname">fetch_apply_list</code><span class="sig-paren">(</span><em>page=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pychara/session.html#Session.fetch_apply_list"><span class="viewcode-link">[ソース]</span></a><a class="headerlink" href="#pychara.session.Session.fetch_apply_list" title="この定義へのパーマリンク">¶</a></dt>
 <dd><p>抽選申し込み履歴の抽出</p>
@@ -101,6 +158,31 @@
 </dl>
 <p class="rubric">サンプル</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fetch_apply_list</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pychara.session.Session.fetch_apply_schedule">
+<code class="descname">fetch_apply_schedule</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pychara/session.html#Session.fetch_apply_schedule"><span class="viewcode-link">[ソース]</span></a><a class="headerlink" href="#pychara.session.Session.fetch_apply_schedule" title="この定義へのパーマリンク">¶</a></dt>
+<dd><p>申し込みスケジュールの取得</p>
+<dl class="field-list simple">
+<dt class="field-odd">戻り値</dt>
+<dd class="field-odd"><p>申し込みスケージュール情報の辞書のリスト</p>
+</dd>
+<dt class="field-even">戻り値の型</dt>
+<dd class="field-even"><p>list</p>
+</dd>
+<dt class="field-odd">例外</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#pychara.exceptions.HTTPConnectException" title="pychara.exceptions.HTTPConnectException"><strong>pychara.exceptions.HTTPConnectException</strong></a> -- </p></li>
+<li><p><a class="reference internal" href="#pychara.exceptions.HTMLParseException" title="pychara.exceptions.HTMLParseException"><strong>pychara.exceptions.HTMLParseException</strong></a> -- </p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">サンプル</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fetch_apply_schedule</span><span class="p">()</span>
+<span class="go">[{&#39;title&#39;: &#39;...&#39;, &#39;body&#39;: &#39;...&#39;}, {&#39;title...]</span>
 </pre></div>
 </div>
 </dd></dl>

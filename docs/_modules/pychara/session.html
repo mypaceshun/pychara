@@ -39,7 +39,8 @@
 <span class="kn">from</span> <span class="nn">pychara.exceptions</span> <span class="k">import</span> <span class="p">(</span><span class="n">LoginFailureException</span><span class="p">,</span>
                                 <span class="n">LoginRequireException</span><span class="p">,</span>
                                 <span class="n">HTTPConnectException</span><span class="p">,</span>
-                                <span class="n">HTMLParseException</span><span class="p">)</span>
+                                <span class="n">HTMLParseException</span><span class="p">,</span>
+                                <span class="n">ApplyDisableException</span><span class="p">)</span>
 
 <span class="n">LOGIN</span> <span class="o">=</span> <span class="s1">&#39;login&#39;</span>
 <span class="n">LOGOUT</span> <span class="o">=</span> <span class="s1">&#39;logout&#39;</span>
@@ -54,6 +55,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">LOGOUT_URL</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/logout.aspx&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">APPLY_URL</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/akb_history.aspx&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">PURCHASE_URL</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/purchase_history.aspx&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">POST_URL</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">/hall1/akbreserve.aspx&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_find_hidden</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html</span><span class="p">):</span>
         <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
@@ -271,7 +273,105 @@
                              <span class="s1">&#39;address&#39;</span><span class="p">:</span> <span class="n">address</span><span class="p">,</span>
                              <span class="s1">&#39;details&#39;</span><span class="p">:</span> <span class="n">details</span><span class="p">}</span>
             <span class="n">purchase_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">purchase_data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">purchase_list</span></div></div>
+        <span class="k">return</span> <span class="n">purchase_list</span></div>
+
+<div class="viewcode-block" id="Session.fetch_apply_schedule"><a class="viewcode-back" href="../../pychara.html#pychara.session.Session.fetch_apply_schedule">[ドキュメント]</a>    <span class="k">def</span> <span class="nf">fetch_apply_schedule</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;申し込みスケジュールの取得</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: 申し込みスケージュール情報の辞書のリスト</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            pychara.exceptions.HTTPConnectException</span>
+<span class="sd">            pychara.exceptions.HTMLParseException</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; fetch_apply_schedule()</span>
+<span class="sd">            [{&#39;title&#39;: &#39;...&#39;, &#39;body&#39;: &#39;...&#39;}, {&#39;title...]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad HTTP Status Code returnd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HTTPConnectException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">contents_el</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;mainTopContents3_l&#39;</span><span class="p">})[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">contents_el</span> <span class="o">=</span> <span class="n">contents_el</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="s1">&#39;accordion_block&#39;</span><span class="p">})</span>
+            <span class="n">content_els</span> <span class="o">=</span> <span class="n">contents_el</span><span class="o">.</span><span class="n">findAll</span><span class="p">([</span><span class="s1">&#39;h3&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">])</span>
+            <span class="n">apply_schedule_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1"># h3とpを1セットにする、注釈でpが1つ余る</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">content_els</span><span class="p">):</span>
+                <span class="n">content_el</span> <span class="o">=</span> <span class="n">content_els</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">content_el</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;h3&#39;</span><span class="p">:</span>
+                    <span class="n">h3_el</span> <span class="o">=</span> <span class="n">content_el</span>
+                    <span class="n">p_el</span> <span class="o">=</span> <span class="n">content_els</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">h3_el</span><span class="o">.</span><span class="n">text</span>
+                    <span class="n">body</span> <span class="o">=</span> <span class="n">p_el</span><span class="o">.</span><span class="n">text</span>
+                    <span class="n">apply_schedule_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+                                                <span class="s1">&#39;body&#39;</span><span class="p">:</span> <span class="n">body</span><span class="p">})</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">apply_schedule_list</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTMLParseException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Session.fetch_apply_enable"><a class="viewcode-back" href="../../pychara.html#pychara.session.Session.fetch_apply_enable">[ドキュメント]</a>    <span class="k">def</span> <span class="nf">fetch_apply_enable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;申し込み受付中かどうかのチェック</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: 申し込み受付中ならTrue</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            pychara.exceptions.HTTPConnectException</span>
+<span class="sd">            pychara.exceptions.HTMLParseException</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; fetch_apply_enable()</span>
+<span class="sd">            True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BASE_URL</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad HTTP Status Code returnd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HTTPConnectException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">)</span>
+        <span class="n">main_btn_el</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="s1">&#39;main_btn01&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">main_btn_el</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Session.fetch_apply_events"><a class="viewcode-back" href="../../pychara.html#pychara.session.Session.fetch_apply_events">[ドキュメント]</a>    <span class="k">def</span> <span class="nf">fetch_apply_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;申し込み可能な日程とグループのリストを取得</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: 申し込み可能な日程とグループのリスト</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            pychara.exceptions.HTTPConnectException</span>
+<span class="sd">            pychara.exceptions.HTMLParseException</span>
+<span class="sd">            pychara.exceptions.ApplyDisableException</span>
+
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; fetch_apply_enables()</span>
+<span class="sd">            [{&#39;text&#39;: &#39;...&#39;, &#39;value&#39;: &#39;...&#39;}, {&#39;text...]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fetch_apply_enable</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">ApplyDisableException</span><span class="p">(</span><span class="s1">&#39;Apply disable&#39;</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">POST_URL</span><span class="p">,</span> <span class="n">cookies</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cookies</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad HTTP Status Code returnd </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">HTTPConnectException</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">events_els</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;select&#39;</span><span class="p">)</span>
+            <span class="n">options_els</span> <span class="o">=</span> <span class="n">events_els</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s1">&#39;option&#39;</span><span class="p">)</span>
+            <span class="n">apply_list</span> <span class="o">=</span>  <span class="p">[{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">]}</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">options_els</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">apply_list</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTMLParseException</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div></div>
+
 </pre></div>
 
           </div>
