@@ -20,6 +20,7 @@ class Session():
         self.LOGOUT_URL = '{}/logout.aspx'.format(self.BASE_URL)
         self.APPLY_URL = '{}/akb_history.aspx'.format(self.BASE_URL)
         self.PURCHASE_URL = '{}/purchase_history.aspx'.format(self.BASE_URL)
+        self.POST_URL = '{}/hall1/akbreserve.aspx'.format(self.BASE_URL)
 
     def _find_hidden(self, html):
         soup = BeautifulSoup(html, "html.parser")
@@ -240,27 +241,68 @@ class Session():
         return purchase_list
 
     def fetch_apply_schedule(self):
+        """申し込みスケジュールの取得
+
+        Returns:
+            list: 申し込みスケージュール情報の辞書のリスト
+
+        Raises:
+            pychara.exceptions.HTTPConnectException
+            pychara.exceptions.HTMLParseException
+
+        Examples:
+            >>> fetch_apply_schedule()
+            [{'title': '...', 'body': '...'}, {'title...]
+        """
         res = requests.get(self.BASE_URL, cookies=self.cookies)
         if res.status_code != 200:
             msg = 'Bad HTTP Status Code returnd {}'.format(res.status_code)
             raise HTTPConnectException(msg)
         soup = BeautifulSoup(res.text, 'html.parser')
-        contents_el = soup.findAll('div', attrs={'id': 'mainTopContents3_l'})[0]
-        contents_el = contents_el.find('div', attrs={'class': 'accordion_block'})
-        content_els = contents_el.findAll(['h3', 'p'])
-        apply_schedule_list = []
-        # h3とpを1セットにする、注釈でpが1つ余る
-        i = 0
-        while i < len(content_els):
-            content_el = content_els[i]
-            if content_el.name == 'h3':
-                h3_el = content_el
-                p_el = content_els[i+1]
-                title = h3_el.text
-                body = p_el.text
-                apply_schedule_list.append({'title': title,
-                                            'body': body})
-                i = i + 2
-            else:
-                i = i + 1
-        print(apply_schedule_list)
+        try:
+            contents_el = soup.findAll('div', attrs={'id': 'mainTopContents3_l'})[0]
+            contents_el = contents_el.find('div', attrs={'class': 'accordion_block'})
+            content_els = contents_el.findAll(['h3', 'p'])
+            apply_schedule_list = []
+            # h3とpを1セットにする、注釈でpが1つ余る
+            i = 0
+            while i < len(content_els):
+                content_el = content_els[i]
+                if content_el.name == 'h3':
+                    h3_el = content_el
+                    p_el = content_els[i+1]
+                    title = h3_el.text
+                    body = p_el.text
+                    apply_schedule_list.append({'title': title,
+                                                'body': body})
+                    i = i + 2
+                else:
+                    i = i + 1
+            return apply_schedule_list
+        except Exception as error:
+            raise HTMLParseException(error)
+
+
+    def apply_enable(self):
+        """申し込み受付中かどうかのチェック
+
+        Returns:
+            bool: 申し込み受付中ならTrue
+
+        Raises:
+            pychara.exceptions.HTTPConnectException
+            pychara.exceptions.HTMLParseException
+
+        Examples:
+            >>> fetch_apply_schedule()
+            [{'title': '...', 'body': '...'}, {'title...]
+        """
+        res = requests.get(self.BASE_URL, cookies=self.cookies)
+        if res.status_code != 200:
+            msg = 'Bad HTTP Status Code returnd {}'.format(res.status_code)
+            raise HTTPConnectException(msg)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        main_btn_el = soup.find('div', 'main_btn01')
+        if main_btn_el is None:
+            return False
+        return True

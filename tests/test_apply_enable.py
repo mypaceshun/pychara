@@ -1,3 +1,4 @@
+
 import os
 import pytest
 from pychara.session import Session, LOGIN, LOGOUT
@@ -10,5 +11,5 @@ class TestApplySchedule():
             username = lines[0].strip()
             password = lines[1].strip()
         session = Session()
-        schedule =  session.fetch_apply_schedule()
-        assert isinstance(schedule, list)
+        enable = session.apply_enable()
+        assert isinstance(enable, bool)
