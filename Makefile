@@ -21,13 +21,14 @@ usage:
 
 .PHONY: build-env
 build-env:
-	${MAKE} ${VENV}
-	${MAKE} secrets
+	@${MAKE} -s ${VENV}
+	@${MAKE} -s secrets
 
 ${VENV}: requirements.txt
 	${PYTHON3} -m venv ${VENV}
 	${ACTIVATE} && pip install --upgrade pip setuptools wheel
 	${ACTIVATE} && pip install --upgrade -r requirements.txt -r dev-requirements.txt
+	touch ${VENV}
 
 secrets:
 	echo "username" > secrets
