@@ -238,3 +238,29 @@ class Session():
                              'details': details}
             purchase_list.append(purchase_data)
         return purchase_list
+
+    def fetch_apply_schedule(self):
+        res = requests.get(self.BASE_URL, cookies=self.cookies)
+        if res.status_code != 200:
+            msg = 'Bad HTTP Status Code returnd {}'.format(res.status_code)
+            raise HTTPConnectException(msg)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        contents_el = soup.findAll('div', attrs={'id': 'mainTopContents3_l'})[0]
+        contents_el = contents_el.find('div', attrs={'class': 'accordion_block'})
+        content_els = contents_el.findAll(['h3', 'p'])
+        apply_schedule_list = []
+        # h3とpを1セットにする、注釈でpが1つ余る
+        i = 0
+        while i < len(content_els):
+            content_el = content_els[i]
+            if content_el.name == 'h3':
+                h3_el = content_el
+                p_el = content_els[i+1]
+                title = h3_el.text
+                body = p_el.text
+                apply_schedule_list.append({'title': title,
+                                            'body': body})
+                i = i + 2
+            else:
+                i = i + 1
+        print(apply_schedule_list)
