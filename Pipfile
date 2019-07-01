@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+flake8 = "==3.7.7"
+pytest = "==4.3.1"
+sphinx-git = "==10.1.1"
+twine = "*"
+Sphinx = "==2.0.0"
+
+[packages]
+beautifulsoup4 = "==4.7.1"
+requests = "==2.21.0"
+
+[requires]
+python_version = "3.6"
+
+[scripts]
+test = "python -m pytest tests -m 'not slow'"
