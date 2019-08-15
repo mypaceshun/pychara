@@ -73,6 +73,48 @@ class Session():
         self.displayName = username_el.text
         return self.displayName
 
+    def get(self, url, params=None):
+        """セッションを保持しながらGETリクエストを投げる関数
+
+        Args:
+            url (str): URL
+            params (dict): GETパラメータ
+
+        Returns:
+            requests.models.Response: レスポンス
+        """
+
+        if params is None:
+            params = {}
+
+        assert isinstance(params, dict)
+
+        res = requests.get(url,
+                           params=params,
+                           cookies=self.cookies)
+        return res
+
+    def post(self, url, data=None):
+        """セッションを保持しながらPOSTリクエストを投げる関数
+
+        Args:
+            url (str): URL
+            data (dict): POSTパラメータ
+
+        Returns:
+            requests.models.Response: レスポンス
+        """
+        if data is None:
+            data = {}
+
+        assert isinstance(data, dict)
+
+        res = requests.get(url,
+                           data=data,
+                           cookies=self.cookies)
+        return res
+
+
     def status(self):
         """ログインチェックを行う関数
 
@@ -89,6 +131,22 @@ class Session():
         if username_el is None:
             return LOGOUT
         return LOGIN
+
+    def reservable_status(self):
+        """
+        Returns:
+            bool: 抽選申し込み可能ならTrue、そうでなければFalse
+
+        Examles:
+            >>> reserveable_status()
+            True
+        """
+        res = requests.get(self.BASE_URL, cookies=self.cookies)
+        soup = BeautifulSoup(res.text, "html.parser")
+        main_btn_el = soup.find(attrs={"class": "main_btn01"})
+        if main_btn_el is None:
+            return False
+        return True
 
     def fetch_apply_list(self, page=None):
         """抽選申し込み履歴の抽出
